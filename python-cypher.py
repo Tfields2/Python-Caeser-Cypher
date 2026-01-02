@@ -14,7 +14,9 @@ def caesar_encrypt(message, key):
 def caesar_decrypt(ciphertext, key):
     return ciphertext.translate(make_cypher(-key))
 
-
+def brute_force(cipheertext: str):
+    for key in range(1, 26):
+        print(f"Key {key:2}: {caesar_decrypt(cipheertext, key)}")
 message = input("Enter a message to encrypt: ")
 
 while True:
