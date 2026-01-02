@@ -1,16 +1,18 @@
 import string
 
+def make_cypher(key: int):
+    shift = key %26
+    lower_src = string.ascii_lowercase
+    lower_dst = lower_src[shift:] + lower_src[:shift]
+    upper_src = string.ascii_uppercase
+    upper_dst = upper_src[shift:] + upper_src[:shift]
+    return str.maketrans(lower_src + upper_src, lower_dst + upper_dst)
+
 def caesar_encrypt(message, key):
-    shift = key % 26
-    cipher = str.maketrans(string.ascii_lowercase, string.ascii_lowercase[shift:] + string.ascii_lowercase[:shift])
-    ciphertext = message.lower().translate(cipher)
-    return ciphertext
+    return message.translate(make_cypher(key))
 
 def caesar_decrypt(ciphertext, key):
-    shift = (-key) % 26
-    cipher = str.maketrans(string.ascii_lowercase, string.ascii_lowercase[shift:] + string.ascii_lowercase[:shift])
-    message = ciphertext.translate(cipher)
-    return message
+    return ciphertext.translate(make_cypher(-key))
 
 
 message = input("Enter a message to encrypt: ")
