@@ -21,22 +21,34 @@ def make_cipher(key: int):
     upper_dst = upper_src[shift:] + upper_src[:shift]
     return str.maketrans(lower_src + upper_src, lower_dst + upper_dst)
 
+def dedupe_key(cipher_message: str) -> str:
+    # Case-insensitive + trims ends + collapses internal whitespace
+    return " ".join(cipher_message.split()).casefold()
+
 def caesar_encrypt(message: str, key: int) -> str:
     encrypted = message.translate(make_cipher(key))
     file_path = "cipher_log.jsonl"
 
-    record_id = 1
+    seen = set()
+    last_id = 0
+
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
             for line in f:
-                pass
-            if line.strip():
-                record_id = json.loads(line)["id"] + 1
+                record = json.loads(line)
+                last_id = record.get("id", last_id)
+
+                seen.add(dedupe_key(record.get("cipher_message", "")))
+
+                if dedupe_key(encrypted) in seen:
+                    return encrypted
+        
+        new_id = last_id + 1
 
     with open(file_path, "a", encoding="utf-8") as f:
         json.dump(
             {
-                "id": record_id,
+                "id": new_id,
                 "cipher_message": encrypted,
                 "key": key
             },
@@ -44,7 +56,7 @@ def caesar_encrypt(message: str, key: int) -> str:
             ensure_ascii=False
         )
         f.write("\n")
-
+    
     return encrypted
 
 def caesar_decrypt(ciphertext: str, key: int) -> str:
