@@ -35,29 +35,34 @@ def caesar_encrypt(message: str, key: int) -> str:
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
             for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+
                 record = json.loads(line)
+
                 last_id = record.get("id", last_id)
 
-                seen.add(dedupe_key(record.get("cipher_message", "")))
+                seen.add(
+                    (dedupe_key(record.get("cipher_message", "")), record.get("key"))
+                )
 
-                if dedupe_key(encrypted) in seen:
-                    return encrypted
-        
-        new_id = last_id + 1
+    # Case-insensitive ciphertext + same key = duplicate
+    if (dedupe_key(encrypted), key) in seen:
+        return encrypted
+
+    new_id = last_id + 1
 
     with open(file_path, "a", encoding="utf-8") as f:
         json.dump(
-            {
-                "id": new_id,
-                "cipher_message": encrypted,
-                "key": key
-            },
+            {"id": new_id, "cipher_message": encrypted, "key": key},
             f,
             ensure_ascii=False
         )
         f.write("\n")
-    
+
     return encrypted
+
 
 def caesar_decrypt(ciphertext: str, key: int) -> str:
     return ciphertext.translate(make_cipher(-key))
