@@ -71,6 +71,21 @@ def brute_force(ciphertext: str):
     for key in range(1, 26):
         print(f"Key {key:2}: {caesar_decrypt(ciphertext, key)}")
 
+def get_record_by_id(file_path: str, record_id: int) -> dict | None:
+    if not os.path.exists(file_path):
+        return None
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            record = json.loads(line)
+            if record.get("id") == record_id:
+                return record
+
+    return None
+
 def read_file(path: str) -> str:
     return Path(path).read_text(encoding="utf-8")
 
@@ -81,7 +96,7 @@ def menu():
     print("\nMenu:")
     print("1. Encrypt a message")
     print("2. Decrypt a message")
-    print("3. Brute-force decrypt a message")
+    print("3. Brute-force decrypt from log ID")
     print("4. Encrypt a file")
     print("5. Decrypt a file")
     print("6. Exit")
@@ -101,7 +116,23 @@ while True:
         print("Decrypted message:", caesar_decrypt(ciphertext, key))
 
     elif choice == "3":
-        ciphertext = input("Enter ciphertext to brute-force decrypt: ")
+        file_path = "cipher_log.jsonl"
+        try:
+            record_id = int(input("Enter log ID to brute-force decrypt: ").strip())
+        except ValueError:
+            print("Invalid ID. Please enter a number.")
+            continue
+        record = get_record_by_id(file_path, record_id)
+        if record is None:
+            print(f"No record found with id {record_id}.")
+            continue
+
+        ciphertext = record.get("cipher_message", "")
+        if not ciphertext:
+            print(f"Record {record_id} has no cipher_message.")
+            continue
+
+        print(f"Brute-forcing log id {record_id}: {ciphertext}")
         brute_force(ciphertext)
 
     elif choice == "4":
